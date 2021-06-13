@@ -13,18 +13,128 @@ canada = 'CAN'
 costa_rica ='CRI'
 
 chile_info = requests.get('http://tarea-4.2021-1.tallerdeintegracion.cl/gho_CHL.xml')
+australia_info = requests.get('http://tarea-4.2021-1.tallerdeintegracion.cl/gho_AUS.xml')
+colombia_info = requests.get('http://tarea-4.2021-1.tallerdeintegracion.cl/gho_COL.xml')
+estados_unidos_info = requests.get('http://tarea-4.2021-1.tallerdeintegracion.cl/gho_USA.xml')
+canada_info = requests.get('http://tarea-4.2021-1.tallerdeintegracion.cl/gho_CAN.xml')
+costa_rica_info = requests.get('http://tarea-4.2021-1.tallerdeintegracion.cl/gho_CRI.xml')
 
 chile_excel_root = ElementTree.fromstring(chile_info.content)
+australia_excel_root = ElementTree.fromstring(australia_info.content)
+colombia_excel_root = ElementTree.fromstring(colombia_info.content)
+estados_unidos_excel_root = ElementTree.fromstring(estados_unidos_info.content)
+canada_excel_root = ElementTree.fromstring(canada_info.content)
+costa_rica_root = ElementTree.fromstring(costa_rica.content)
 
-aspectos = chile_excel_root.findall('Fact/GHO/Alcohol')
 
-for country in aspectos:
-    print(country.text)
+def parse_XML(root, indicadores):
+    Fact = root.findall('Fact')
+    df_cols = ['GHO', 'COUNTRY', 'SEX', 'YEAR', 'GHECAUSES', 'AGEGROUP', 'Display', 'Numeric', 'Low', 'High']
+    rows = []
+    for node in Fact:
+        res = []
+        nombre = node.find(df_cols[0]).text
+        if nombre in indicadores:
+            res.append(nombre)
+            for el in df_cols[1:]: 
+                if node is not None and node.find(el) is not None:
+                    res.append(node.find(el).text)
+                else: 
+                    res.append(None)
+            rows.append({df_cols[i]: res[i] for i, _ in enumerate(df_cols)})
+            out_df = pd.DataFrame(rows, columns=df_cols)
+    return out_df
+
+Fact = chile_excel_root.findall('Fact')
+# def parse_XML(xml_file, df_cols): 
+#     """Parse the input XML file and store the result in a pandas 
+#     DataFrame with the given columns. 
+    
+#     The first element of df_cols is supposed to be the identifier 
+#     variable, which is an attribute of each node element in the 
+#     XML data; other features will be parsed from the text content 
+#     of each sub-element. 
+#     """
+    
+#     xtree = et.parse(xml_file)
+#     xroot = xtree.getroot()
+#     rows = []
+    
+#     for node in xroot: 
+#         res = []
+#         res.append(node.attrib.get(df_cols[0]))
+#         for el in df_cols[1:]: 
+#             if node is not None and node.find(el) is not None:
+#                 res.append(node.find(el).text)
+#             else: 
+#                 res.append(None)
+#         rows.append({df_cols[i]: res[i] 
+#                      for i, _ in enumerate(df_cols)})
+    
+#     out_df = pd.DataFrame(rows, columns=df_cols)
+        
+#     return out_df
+
+indicadores = ['Number of deaths', 'Number of infant deaths', 'Number of under-five deaths',
+'Mortality rate for 5-14 year-olds (probability of dying per 1000 children aged 5-14 years)','Adult mortality rate (probability of dying between 15 and 60 years per 1000 population)',
+'Estimates of number of homicides','Crude suicide rates (per 100 000 population)','Mortality rate attributed to unintentional poisoning (per 100 000 population)',
+'Number of deaths attributed to non-communicable diseases, by type of disease and sex', 'Estimated road traffic death rate (per 100 000 population)', 'Estimated number of road traffic deaths',
+'Mean BMI (kg/m&#xb2;) (crude estimate)','Mean BMI (kg/m&#xb2;) (age-standardized estimate)',  'Prevalence of obesity among adults, BMI &GreaterEqual; 30 (age-standardized estimate) (%)', 
+'Prevalence of obesity among children and adolescents, BMI > +2 standard deviations above the median (crude estimate) (%)', 'Prevalence of overweight among adults, BMI &GreaterEqual; 25 (age-standardized estimate) (%)',
+'Prevalence of overweight among children and adolescents, BMI > +1 standard deviations above the median (crude estimate) (%)','Prevalence of underweight among adults, BMI < 18.5 (age-standardized estimate) (%)', 'Prevalence of thinness among children and adolescents, BMI < -2 standard deviations below the median (crude estimate) (%)',
+'Alcohol, recorded per capita (15+) consumption (in litres of pure alcohol)', 'Estimate of daily cigarette smoking prevalence (%)', 'Estimate of daily tobacco smoking prevalence (%)', 'Estimate of current cigarette smoking prevalence (%)', 
+'Estimate of current tobacco smoking prevalence (%)', 'Mean systolic blood pressure (crude estimate)','Mean fasting blood glucose (mmol/l) (crude estimate)', 'Mean Total Cholesterol (crude estimate)' ]
+
+indicadores_muertes = ['Number of deaths', 'Number of infant deaths', 'Number of under-five deaths',
+'Mortality rate for 5-14 year-olds (probability of dying per 1000 children aged 5-14 years)','Adult mortality rate (probability of dying between 15 and 60 years per 1000 population)',
+'Estimates of number of homicides','Crude suicide rates (per 100 000 population)','Mortality rate attributed to unintentional poisoning (per 100 000 population)',
+'Number of deaths attributed to non-communicable diseases, by type of disease and sex', 'Estimated road traffic death rate (per 100 000 population)', 'Estimated number of road traffic deaths']
+indicadores_peso =['Mean BMI (kg/m&#xb2;) (crude estimate)','Mean BMI (kg/m&#xb2;) (age-standardized estimate)',  'Prevalence of obesity among adults, BMI &GreaterEqual; 30 (age-standardized estimate) (%)', 
+'Prevalence of obesity among children and adolescents, BMI > +2 standard deviations above the median (crude estimate) (%)', 'Prevalence of overweight among adults, BMI &GreaterEqual; 25 (age-standardized estimate) (%)',
+'Prevalence of overweight among children and adolescents, BMI > +1 standard deviations above the median (crude estimate) (%)','Prevalence of underweight among adults, BMI < 18.5 (age-standardized estimate) (%)', 
+'Prevalence of thinness among children and adolescents, BMI < -2 standard deviations below the median (crude estimate) (%)']
+otros_indicadores = ['Alcohol, recorded per capita (15+) consumption (in litres of pure alcohol)', 'Estimate of daily cigarette smoking prevalence (%)', 'Estimate of daily tobacco smoking prevalence (%)', 'Estimate of current cigarette smoking prevalence (%)', 
+'Estimate of current tobacco smoking prevalence (%)', 'Mean systolic blood pressure (crude estimate)','Mean fasting blood glucose (mmol/l) (crude estimate)', 'Mean Total Cholesterol (crude estimate)']
+
+df_cols = ['GHO', 'COUNTRY', 'SEX', 'YEAR', 'GHECAUSES', 'AGEGROUP', 'Display', 'Numeric', 'Low', 'High']
+
+rows = []
+for node in Fact:
+    res = []
+    # aqui hacer if 
+    nombre = node.find(df_cols[0]).text
+    if nombre in indicadores:
+        res.append(nombre)
+        for el in df_cols[1:]: 
+            if node is not None and node.find(el) is not None:
+                res.append(node.find(el).text)
+            else: 
+                res.append(None)
+        rows.append({df_cols[i]: res[i] for i, _ in enumerate(df_cols)})
+        out_df = pd.DataFrame(rows, columns=df_cols)
+out_df.to_excel("algo.xlsx")
+    # GHO = node.find('GHO').text if node is not None else None
+    # COUNTRY = node.find('COUNTRY').text if node is not None else None
+    # SEX = node.find('SEX').text if node is not None else None
+    # YEAR = node.find('YEAR').text if node is not None else None
+    # GHECAUSES = node.find('GHECAUSES').text if node is not None else None
+    # AGEGROUP = node.find('AGEGROUP').text if node is not None else None
+    # Display = node.find('Display').text if node is not None else None
+    # Numeric = node.find('Numeric').text if node is not None else None
+    # Low = node.find('Low').text if node is not None else None
+    # High = node.find('High').text if node is not None else None
+    # print(GHO, COUNTRY, SEX, YEAR, GHECAUSES, AGEGROUP, Display)
+    # numbre_death = node.find("Number of deaths").text if node is not None else None
+    # if numbre_death is not None:
+    #     print(numbre_death)
 # print(aspectos)
 # chile_excel_root.iter('*'):
 # for child in chile_excel_root.iter(''):
-#     print(child.getchildren().atrri)
-# print("hola")
+#     print(child.getchildren().attrib)
+print("hola")
+
+
+
 # # ACCES GOOGLE SHEET
 # gc = gspread.service_account(
 #     filename='taller-tarea-4-315516-d690cdb3da75.json')
